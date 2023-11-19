@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract EnhancedSmartContract is Ownable {
+    uint256 private data;
+    uint256 private constant MAX_DATA_VALUE = 1000;
+
+    event DataUpdated(uint256 newData);
+    event Withdrawal(address indexed recipient, uint256 amount);
+
+    constructor(uint256 initialData) {
+        require(initialData <= MAX_DATA_VALUE, "Initial data must be less than or equal to MAX_DATA_VALUE");
+        data = initialData;
+    }
+
+    function updateData(uint256 newData) external onlyOwner {
+        require(newData != data, "New data must be different from current data");
+        require(newData <= MAX_DATA_VALUE, "Data must be less than or equal to MAX_DATA_VALUE");
+        data = newData;
+        emit DataUpdated(newData);
+    }
+
+    function getData() external view returns (uint256) {
+        return data;
+    }
+
+    function getContractBalance() external view onlyOwner returns (uint256) {
+        return address(this).balance;
+    }
+
+    function withdraw(uint256 amount) external onlyOwner {
+        require(amount <= address(this).balance, "Insufficient contract balance");
+        payable(owner()).transfer(amount);
+        emit Withdrawal(owner(), amount);
+    }
+
+    function conditionalUpdateData(uint256 newData) external onlyOwner {
+        require(newData > data, "New data must be greater than current data");
+        require(newData <= MAX_DATA_VALUE, "Data must be less than or equal to MAX_DATA_VALUE");
+        data = newData;
+        emit DataUpdated(newData);
+    }
+
+    // Fallback function to receive Ether
+    receive() external payable {}
+}
